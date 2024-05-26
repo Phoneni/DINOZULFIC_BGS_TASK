@@ -5,13 +5,18 @@
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "SkateMovementComponent.h"
 
-
-
-
-ASkateboardCharacter::ASkateboardCharacter()
+ASkateboardCharacter::ASkateboardCharacter(const FObjectInitializer& OI)
+	:
+	Super(OI.SetDefaultSubobjectClass<USkateMovementComponent>(ACharacter::CharacterMovementComponentName)),
+	RagdollDuration(4.f),
+	RagdollElapsedTime(0.f)
 {
 	PrimaryActorTick.bCanEverTick = true;
+	bCanJump = true;
+	JumpCooldownDuration = 0.7f;
+
 	CharacterSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CharacterSpringArm"));
 	CharacterSpringArm->SetupAttachment(RootComponent);
 
@@ -27,6 +32,21 @@ void ASkateboardCharacter::BeginPlay()
 void ASkateboardCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (bApplyingMovement)
+	{
+		GetSkateMovementComponent()->TryIncrementVelocityStep(DeltaTime);
+	}
+
+	if (bRagdolling)
+	{
+		RagdollElapsedTime += DeltaTime;
+		if (RagdollElapsedTime > RagdollDuration)
+		{
+			GetMesh()->SetSimulatePhysics(false);
+		}
+		//SetActorLocation(GetMesh()->GetComponentLocation());
+	}
 }
 
 void ASkateboardCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -57,40 +77,50 @@ void ASkateboardCharacter::PawnClientRestart()
 	}
 }
 
-void ASkateboardCharacter::AccelerateFn(float InValue)
+USkateMovementComponent* ASkateboardCharacter::GetSkateMovementComponent()
 {
-	if (InValue >= 0)
+	if (!SkateMovementRef.IsValid())
 	{
-		AddMovementInput(InValue * GetActorForwardVector());
+		SkateMovementRef = Cast<USkateMovementComponent>(GetCharacterMovement());
 	}
-	else if (InValue < 0)
+	return SkateMovementRef.Get();
+}
+
+void ASkateboardCharacter::StartRagdoll()
+{
+	RagdollElapsedTime = 0.f;
+	bRagdolling = true;
+	GetMesh()->SetSimulatePhysics(true);
+}
+
+void ASkateboardCharacter::EnableJump()
+{
+	bCanJump = true;
+}
+
+void ASkateboardCharacter::Landed(const FHitResult& Hit)
+{
+	bCanJump = false;
+	GetWorld()->GetTimerManager().SetTimer(JumpCooldownTimerHandle, this, &ASkateboardCharacter::EnableJump, JumpCooldownDuration, false);
+
+	const float CameraRightDot = FVector::DotProduct(GetActorRightVector(), GetVelocity().GetSafeNormal(0.01f));
+	if (CameraRightDot > 0.707f || CameraRightDot < -0.707f)
 	{
-		DecelerateFn(InValue);
+		StartRagdoll();
 	}
 }
-
-void ASkateboardCharacter::SteerFn(float InValue)
-{
-	AddMovementInput(InValue * GetActorRightVector());
-}
-
-
-void ASkateboardCharacter::DecelerateFn(float InValue)
-{
-
-}
-
 
 void ASkateboardCharacter::MovementFn(const FInputActionValue& MovementValue)
 {
-	FVector CamForward = CharacterCamera->GetForwardVector();
-	CamForward.Z = 0.f;
-	CamForward = CamForward.GetSafeNormal(0.001f);
-
-	float AccelerateValue = GetActorForwardVector().ProjectOnTo(CamForward).Size() * MovementValue[1];
-	float SteerValue = GetActorRightVector().ProjectOnTo(CamForward).Size() * MovementValue[0];
-	AccelerateFn(AccelerateValue);
-	SteerFn(SteerValue);
+	bApplyingMovement = MovementValue[1] > 0.f;
+	if (bApplyingMovement)
+	{
+		
+		FVector CamForward = CharacterCamera->GetForwardVector();
+		CamForward.Z = 0.f;
+		CamForward = CamForward.GetSafeNormal(0.001f);
+		AddMovementInput(CamForward * MovementValue[1]);
+	}
 }
 
 void ASkateboardCharacter::JumpFn(const FInputActionValue& JumpValue)
@@ -98,7 +128,7 @@ void ASkateboardCharacter::JumpFn(const FInputActionValue& JumpValue)
 	const bool JumpVal = JumpValue.Get<bool>();
 	if (GetController())
 	{
-		if (JumpVal)
+		if (JumpVal && bCanJump)
 		{
 			Jump();
 		}

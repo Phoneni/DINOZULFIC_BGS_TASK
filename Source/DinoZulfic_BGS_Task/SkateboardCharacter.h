@@ -10,7 +10,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
-
+class USkateMovementComponent;
 
 UCLASS()
 class DINOZULFIC_BGS_TASK_API ASkateboardCharacter : public ACharacter
@@ -18,7 +18,7 @@ class DINOZULFIC_BGS_TASK_API ASkateboardCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
-	ASkateboardCharacter();
+	ASkateboardCharacter(const FObjectInitializer& OI);
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -36,22 +36,33 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Controls | Input")
 	UInputMappingContext* BaseMappingContext;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Ragdoll")
+	float RagdollDuration;
 
-protected:
-	virtual void BeginPlay() override;
+private:
+	FTimerHandle JumpCooldownTimerHandle;
+	bool bCanJump;
+	float JumpCooldownDuration;
+	float RagdollElapsedTime;
+	bool bApplyingMovement;
+	TWeakObjectPtr<USkateMovementComponent> SkateMovementRef;
+	bool bRagdolling;
 
 public:	
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void PawnClientRestart() override;
+	virtual void Landed(const FHitResult& Hit) override;
+	UFUNCTION(BlueprintPure)
+	USkateMovementComponent* GetSkateMovementComponent();
+
+protected:
+	virtual void BeginPlay() override;
 
 
 private:
-
-	void AccelerateFn(float InValue);
-	void DecelerateFn(float InValue);
-	void SteerFn(float InValue);
-
+	void StartRagdoll();
+	void EnableJump();
 
 	UFUNCTION()
 	void MovementFn(const FInputActionValue& MovementValue);
