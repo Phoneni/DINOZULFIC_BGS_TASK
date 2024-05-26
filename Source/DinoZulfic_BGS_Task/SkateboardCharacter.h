@@ -29,22 +29,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Controls | Input")
 	UInputAction* MovementAction;
 	UPROPERTY(EditDefaultsOnly, Category = "Controls | Input")
-	UInputAction* SteeringAction;
-	UPROPERTY(EditDefaultsOnly, Category = "Controls | Input")
 	UInputAction* JumpAction;
 	UPROPERTY(EditDefaultsOnly, Category = "Controls | Input")
 	UInputAction* CameraMovementAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Controls | Input")
 	UInputMappingContext* BaseMappingContext;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Movement")
-	float MaxMovementSpeed;
-	UPROPERTY(EditDefaultsOnly, Category = "Movement")
-	float AccelerationModifier;
-	UPROPERTY(EditDefaultsOnly, Category = "Movement")
-	float DecelrationModifier;
-
 
 
 protected:

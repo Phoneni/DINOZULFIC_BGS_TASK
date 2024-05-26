@@ -32,6 +32,9 @@ void ASkateboardCharacter::Tick(float DeltaTime)
 void ASkateboardCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	check(PlayerInputComponent);
+
 	if (UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		if (MovementAction) { EIC->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ASkateboardCharacter::MovementFn); }
