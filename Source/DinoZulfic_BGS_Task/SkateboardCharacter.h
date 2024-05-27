@@ -48,6 +48,7 @@ private:
 	bool bApplyingMovement;
 	TWeakObjectPtr<USkateMovementComponent> SkateMovementRef;
 	bool bRagdolling;
+	FTransform MeshOriginalTransform;
 
 public:	
 	virtual void Tick(float DeltaTime) override;

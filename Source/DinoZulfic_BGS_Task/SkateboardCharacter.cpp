@@ -30,7 +30,7 @@ void ASkateboardCharacter::BeginPlay()
 	Super::BeginPlay();	
 
 	
-	
+	MeshOriginalTransform = GetMesh()->GetRelativeTransform();
 	GetSkateMovementComponent()->OnStepIncremented.AddDynamic(this, &ASkateboardCharacter::PostIncrementedStepCount);
 }
 
@@ -49,6 +49,9 @@ void ASkateboardCharacter::Tick(float DeltaTime)
 		if (RagdollElapsedTime > RagdollDuration)
 		{
 			GetMesh()->SetSimulatePhysics(false);
+			bRagdolling = false;
+			GetMesh()->AttachToComponent(GetRootComponent(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
+			GetMesh()->SetRelativeTransform(MeshOriginalTransform);
 		}
 		//SetActorLocation(GetMesh()->GetComponentLocation());
 	}
@@ -57,7 +60,7 @@ void ASkateboardCharacter::Tick(float DeltaTime)
 
 	const float CurrentSpeed = GetVelocity().Size();
 
-	float SpeedPerStep = GetSkateMovementComponent()->MaxSpeedPerStep;
+	const float SpeedPerStep = GetSkateMovementComponent()->MaxSpeedPerStep;
 	
 	for (int32 i = 0; i < SpeedPerStep; i++)
 	{
@@ -142,6 +145,10 @@ void ASkateboardCharacter::MovementFn(const FInputActionValue& MovementValue)
 		CamForward.Z = 0.f;
 		CamForward = CamForward.GetSafeNormal(0.001f);
 		AddMovementInput(CamForward * MovementValue[1]);
+	}
+	if (MovementValue[1] < 0 && FVector::DotProduct(GetVelocity(), GetActorForwardVector()) > 0.f)
+	{
+		AddMovementInput(GetActorForwardVector() * MovementValue[1]);
 	}
 }
 
