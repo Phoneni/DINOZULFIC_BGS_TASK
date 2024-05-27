@@ -41,6 +41,7 @@ public:
 
 private:
 	FTimerHandle JumpCooldownTimerHandle;
+	float LastFrameSpeed;
 	bool bCanJump;
 	float JumpCooldownDuration;
 	float RagdollElapsedTime;
@@ -55,6 +56,8 @@ public:
 	virtual void Landed(const FHitResult& Hit) override;
 	UFUNCTION(BlueprintPure)
 	USkateMovementComponent* GetSkateMovementComponent();
+	UFUNCTION(BlueprintImplementableEvent)
+	void PostIncrementedStepCount(int InInt);
 
 protected:
 	virtual void BeginPlay() override;
@@ -63,6 +66,7 @@ protected:
 private:
 	void StartRagdoll();
 	void EnableJump();
+
 
 	UFUNCTION()
 	void MovementFn(const FInputActionValue& MovementValue);

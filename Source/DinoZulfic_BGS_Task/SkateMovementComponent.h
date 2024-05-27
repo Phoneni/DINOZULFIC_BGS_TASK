@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -6,15 +5,17 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "SkateMovementComponent.generated.h"
 
-/**
- * 
- */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStepIncremented, int, InStep);
+
 UCLASS()
 class DINOZULFIC_BGS_TASK_API USkateMovementComponent : public UCharacterMovementComponent
 {
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(BlueprintAssignable)
+	FOnStepIncremented OnStepIncremented;
+
 	UPROPERTY(EditDefaultsOnly)
 	float VelocityInterpSpeed = 3.f;
 	UPROPERTY(EditDefaultsOnly)
@@ -23,9 +24,9 @@ public:
 	int32 MaxSteps = 3;
 	UPROPERTY(EditDefaultsOnly)
 	float TimeToIncreaseStep = 1.f;
+	int32 CurrentStep = 0;
 
 private:
-	int32 CurrentStep = 0;
 	float StepIncreaseElapsedTime = BIG_NUMBER;
 	
 public:

@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "SkateMovementComponent.h"
@@ -21,6 +20,7 @@ float USkateMovementComponent::GetMaxSpeed() const
 	return Super::GetMaxSpeed();
 }
 
+
 void USkateMovementComponent::TryIncrementVelocityStep(float XDeltaTime)
 {
 	if (StepIncreaseElapsedTime > TimeToIncreaseStep)
@@ -28,6 +28,7 @@ void USkateMovementComponent::TryIncrementVelocityStep(float XDeltaTime)
 		if (CurrentStep < MaxSteps)
 		{
 			CurrentStep++;
+			OnStepIncremented.Broadcast(CurrentStep);
 		}
 		StepIncreaseElapsedTime = 0.f;
 	}

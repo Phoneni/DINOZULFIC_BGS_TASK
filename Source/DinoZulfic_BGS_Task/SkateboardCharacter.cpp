@@ -17,6 +17,7 @@ ASkateboardCharacter::ASkateboardCharacter(const FObjectInitializer& OI)
 	bCanJump = true;
 	JumpCooldownDuration = 0.7f;
 
+
 	CharacterSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CharacterSpringArm"));
 	CharacterSpringArm->SetupAttachment(RootComponent);
 
@@ -27,6 +28,10 @@ ASkateboardCharacter::ASkateboardCharacter(const FObjectInitializer& OI)
 void ASkateboardCharacter::BeginPlay()
 {
 	Super::BeginPlay();	
+
+	
+	
+	GetSkateMovementComponent()->OnStepIncremented.AddDynamic(this, &ASkateboardCharacter::PostIncrementedStepCount);
 }
 
 void ASkateboardCharacter::Tick(float DeltaTime)
@@ -47,6 +52,23 @@ void ASkateboardCharacter::Tick(float DeltaTime)
 		}
 		//SetActorLocation(GetMesh()->GetComponentLocation());
 	}
+
+
+
+	const float CurrentSpeed = GetVelocity().Size();
+
+	float SpeedPerStep = GetSkateMovementComponent()->MaxSpeedPerStep;
+	
+	for (int32 i = 0; i < SpeedPerStep; i++)
+	{
+		if (LastFrameSpeed > i * SpeedPerStep && CurrentSpeed < i * SpeedPerStep)
+		{
+			GetSkateMovementComponent()->CurrentStep = i;
+			UE_LOG(LogTemp, Warning, TEXT("The integer value is: %d"), SkateMovementRef->CurrentStep);
+			break;
+		}
+	}
+	LastFrameSpeed = GetVelocity().Size();
 }
 
 void ASkateboardCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
